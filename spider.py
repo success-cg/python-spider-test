@@ -10,7 +10,9 @@ urllib2.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate ve
 '''
 
 import ssl
+
 ssl._create_default_https_context = ssl._create_unverified_context
+
 
 class Spider():
     url = 'https://www.panda.tv/cate/lol'
@@ -34,7 +36,7 @@ class Spider():
         for html in root_html:
             name = re.findall(self.__class__.name_pattern, html, re.S)[0]
             number = re.findall(self.__class__.number_pattern, html, re.S)[0]
-            anchor = { 'name': name, 'number': number }
+            anchor = {'name': name, 'number': number}
             anchors.append(anchor)
         return anchors
 
@@ -47,14 +49,37 @@ class Spider():
         refined_anchors = list(map(lam, anchors))
         return refined_anchors
 
+    def __sort(self, anchors):
+        anchors = sorted(anchors, key=self.__sort_seed, reverse=True)
+        pass
+        return anchors
+
+    def __sort_seed(self, anchor):
+        number = re.findall('\d*\.*\d*', anchor['number'])[0]
+        number = float(number)
+        if '万' in anchor['number']:
+            number *= 10000
+        return number
+
+    def __show(self, anchors):
+        for i in range(0, len(anchors), 1):
+            # print(anchor['name'] + '\t\t\t\t\t\t' + anchor['number'])
+            print(
+                'rank: ' + str(i+1) + '\t\t\t'
+                + anchors[i]['name']
+                + '\t\t\t' + anchors[i]['number']
+            )
+
     # 对外暴露的实例方法，爬虫的执行入口
     def go(self):
-        htmls = self.__fetch_content() # 抓取 htmls 数据
-        anchors = self.__analyse(htmls) # 正则匹配需要内容，组织成 dict 数据格式
-        return self.__refine(anchors) # 精炼数据，去除空格等
+        htmls = self.__fetch_content()  # 抓取 htmls 数据
+        anchors = self.__analyse(htmls)  # 正则匹配需要内容，组织成 dict 数据格式
+        anchors = self.__refine(anchors)  # 精炼数据，去除空格等
+        anchors = self.__sort(anchors)
+        self.__show(anchors)
+        return anchors
 
 
-spider = Spider() # 实例化爬虫
-anchors = spider.go() # 爬取数据
-print(anchors)
+spider = Spider()  # 实例化爬虫
+anchors = spider.go()  # 爬取数据
 pass
